@@ -1,0 +1,55 @@
+.PHONY: all
+all: clean rebuild up status
+
+# Clean everything (containers, images, volumes, networks)
+.PHONY: clean
+clean:
+	@echo "Stopping and removing all containers..."
+	-docker-compose down -v --rmi all --remove-orphans
+	@echo "Removing all unused Docker objects..."
+	-docker system prune -a -f --volumes
+	@echo "Cleaned up all Docker data."
+
+# Rebuild the containers
+.PHONY: rebuild
+rebuild:
+	@echo "Rebuilding PLUG&MEET containers..."
+	docker-compose build --no-cache
+	@echo "PLUG&MEET containers rebuilt."
+
+# Start PLUG&MEET services
+.PHONY: up
+up:
+	@echo "Starting PLUG&MEET services..."
+	docker-compose up -d
+	@echo "Services started."
+
+# Stop all services
+.PHONY: down
+down:
+	@echo "Stopping PLUG&MEET services..."
+	docker-compose down
+	@echo "Services stopped."
+
+# Clean up (stop and remove volumes)
+.PHONY: clean-volumes
+clean-volumes:
+	@echo "Stopping and removing volumes..."
+	docker-compose down -v
+	@echo "Services stopped and volumes removed."
+
+# View logs
+.PHONY: logs
+logs:
+	docker-compose logs -f
+
+# Restart services with a retry mechanism
+.PHONY: restart
+restart: down rebuild up wait-for-livekit status
+	@echo "PLUG&MEET services restarted."
+
+# Check status
+.PHONY: status
+status:
+	@echo "Checking service status..."
+	docker-compose ps
